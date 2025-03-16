@@ -2,14 +2,7 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
-	"goApp/internal/model"
-	"goApp/internal/model/enums"
 	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func ReadQuestions(filename string) ([]string, error) {

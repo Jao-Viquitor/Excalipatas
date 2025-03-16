@@ -165,7 +165,6 @@ func (p *petRepository) readPetFromFile(filePath string) (*model.Pet, error) {
 		return nil, fmt.Errorf("formato inválido no arquivo %s", filePath)
 	}
 
-	// Extrai os dados
 	nameParts := strings.SplitN(lines[0], " ", 2)
 	petType := enums.PetType(lines[1])
 	petSex := enums.PetSex(lines[2])
@@ -173,7 +172,6 @@ func (p *petRepository) readPetFromFile(filePath string) (*model.Pet, error) {
 	age, _ := strconv.ParseFloat(lines[4], 64)
 	weight, _ := strconv.ParseFloat(lines[5], 64)
 
-	// Extrai a data do nome do arquivo
 	filename := filepath.Base(filePath)
 	timeStr := strings.Split(filename, "-")[0]
 	createdAt, _ := time.Parse("20060102T1504", timeStr)
