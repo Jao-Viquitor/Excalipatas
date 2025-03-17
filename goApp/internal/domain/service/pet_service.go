@@ -9,11 +9,19 @@ import (
 	"time"
 )
 
-type PetService struct {
+type PetService interface {
+	RegisterPet(pet *model.Pet) error
+	ListPets() ([]*model.Pet, error)
+	FindPets(criteria string) ([]*model.Pet, error)
+	UpdatePet(pet *model.Pet, filename string) error
+	RemovePet(filename string, confirm string) error
+}
+
+type petService struct {
 	repo repository.PetRepository
 }
 
-func (s *PetService) RegisterPet(pet *model.Pet) error {
+func (s *petService) RegisterPet(pet *model.Pet) error {
 	pet.Name, pet.Surname, _ = utils.ValidateName(pet)
 	pet.Type, _ = utils.ValideteType(pet)
 	pet.Sex, _ = utils.ValideteGender(pet)
@@ -25,16 +33,16 @@ func (s *PetService) RegisterPet(pet *model.Pet) error {
 	return s.repo.Insert(pet)
 }
 
-func (s *PetService) ListPets() ([]*model.Pet, error) {
+func (s *petService) ListPets() ([]*model.Pet, error) {
 	return s.repo.FindAll()
 }
 
-func (s *PetService) FindPets(criteria map[string]string) ([]*model.Pet, error) {
-	criteria, _ = utils.ValidateCriteria(criteria)
-	return s.repo.FindByCriteria(criteria)
+func (s *petService) FindPets(criteria string) ([]*model.Pet, error) {
+	var aux, _ = utils.ParseAndValidateCriteria(criteria)
+	return s.repo.FindByCriteria(aux)
 }
 
-func (s *PetService) UpdatePet(pet *model.Pet, filename string) error {
+func (s *petService) UpdatePet(pet *model.Pet, filename string) error {
 	existingPets, err := s.repo.FindByCriteria(map[string]string{"name": pet.Name, "surname": pet.Surname})
 	if err != nil || len(existingPets) == 0 {
 		return errors.New("pet não encontrado para atualização")
@@ -49,13 +57,13 @@ func (s *PetService) UpdatePet(pet *model.Pet, filename string) error {
 	return s.repo.Update(pet, filename)
 }
 
-func (s *PetService) RemovePet(filename string, confirm string) error {
+func (s *petService) RemovePet(filename string, confirm string) error {
 	if strings.ToUpper(confirm) != "SIM" {
 		return errors.New("deleção cancelada: confirmação deve ser 'SIM'")
 	}
 	return s.repo.Delete(filename)
 }
 
-func NewPetService(repo repository.PetRepository) *PetService {
-	return &PetService{repo: repo}
+func NewPetService(repo repository.PetRepository) PetService {
+	return &petService{repo: repo}
 }

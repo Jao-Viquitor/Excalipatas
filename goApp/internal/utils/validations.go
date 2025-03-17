@@ -6,6 +6,7 @@ import (
 	"goApp/internal/model/enums"
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -73,15 +74,55 @@ func ValidateBreed(pet *model.Pet) (string, error) {
 	return pet.Breed, nil
 }
 
-func ValidateCriteria(criteria map[string]string) (map[string]string, error) {
+func ParseAndValidateCriteria(criteriaStr string) (map[string]string, error) {
+	criteriaStr = strings.TrimSpace(criteriaStr)
+	if criteriaStr == "" {
+		return nil, errors.New("critérios de busca não podem ser vazios")
+	}
+
+	pairs := strings.Split(criteriaStr, " ")
+	criteria := make(map[string]string)
+
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			return nil, errors.New("formato inválido: use 'chave=valor'")
+		}
+		key, value := strings.ToLower(parts[0]), strings.TrimSpace(parts[1])
+		if value == "" {
+			return nil, errors.New("valor não pode ser vazio")
+		}
+		criteria[key] = value
+	}
+
 	if _, ok := criteria["type"]; !ok {
 		return nil, errors.New("o critério 'type' é obrigatório")
 	}
-	if criteria["type"] != string(enums.TypeDog) && criteria["type"] != string(enums.TypeCat) {
+	if criteria["type"] != strings.ToLower(string(enums.TypeDog)) && criteria["type"] != strings.ToLower(string(enums.TypeCat)) {
 		return nil, errors.New("tipo deve ser 'Cachorro' ou 'Gato'")
 	}
 	if len(criteria) > 3 {
 		return nil, errors.New("máximo de 2 critérios adicionais além de 'type'")
 	}
+
 	return criteria, nil
+}
+
+func ValidateNumericInput(input string, fieldName string) (float64, error) {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return 0, errors.New(fieldName + " não pode ser vazio")
+	}
+
+	numRegex := regexp.MustCompile(`^[0-9]+(\.[0-9]+)?$`)
+	if !numRegex.MatchString(input) {
+		return 0, errors.New(fieldName + " deve conter apenas números")
+	}
+
+	value, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return 0, errors.New(fieldName + " inválido: não pôde ser convertido em número")
+	}
+
+	return value, nil
 }
